@@ -6,7 +6,7 @@ An on-call agent that recalls past incidents, root causes, and which fixes worke
 
 The browser talks to a FastAPI backend, which splits into two calls: Groq for LLM reasoning, and Hindsight Cloud for memory (retain, recall, reflect) against a dedicated `dejafix-incidents` bank.
 
-![System architecture](docs/images/architecture_diagram.jpeg)
+![System architecture](docs/architecture_diagram.jpeg)
 
 ## How Hindsight memory is used
 
@@ -15,31 +15,31 @@ The browser talks to a FastAPI backend, which splits into two calls: Groq for LL
 - **reflect**: synthesizes recurring failure patterns across the bank (`GET /api/reflect`).
 - Health: `GET /api/health/hindsight`. If Hindsight is down the UI says so; there is no fake local memory.
 
-![Incident workflow loop](docs/images/loop_diagram.jpeg)
+![Incident workflow loop](docs/loop_diagram.jpeg)
 
 ## Demo: before and after memory
 
 **Memory OFF — generic troubleshooting, no history:**
 
-![Memory off baseline](docs/images/memory_off_baseline.jpeg)
+![Memory off baseline](docs/memory_off_baseline.jpeg)
 
 **Resolving the incident teaches Deja Fix:**
 
-![Resolve form and learned confirmation](docs/images/resolve_form_and_learned.jpeg)
+![Resolve form and learned confirmation](docs/resolve_form_and_learned.jpeg)
 
 **Memory ON — a similar incident recalls the exact prior fix:**
 
-![Memory on, ranked memories](docs/images/memory_on_ranked_memories.jpeg)
+![Memory on, ranked memories](docs/memory_on_ranked_memories.jpeg)
 
 **Hindsight's own memory graph, built automatically from retained incidents:**
 
-![Constellation view](docs/images/constellation_view.jpeg)
+![Constellation view](docs/constellation_view.jpeg)
 
-![Constellation fullscreen](docs/images/constellation_fullscreen.png)
+![Constellation fullscreen](docs/constellation_fullscreen.png)
 
 **The Hindsight dashboard for this project's bank:**
 
-![Hindsight dashboard](docs/images/hindsight_dashboard.jpeg)
+![Hindsight dashboard](docs/hindsight_dashboard.jpeg)
 
 ## Run
 
