@@ -1,0 +1,53 @@
+﻿<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Deja Fix</title>
+<style>
+:root{--bg:#0f1419;--panel:#171e26;--line:#2a3441;--text:#e6edf3;--mut:#8b98a5;--acc:#3fb6a8;--warn:#e5a94b;--bad:#e5645b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,sans-serif}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 24px;border-bottom:1px solid var(--line)}
+h1{font-size:18px;margin:0}main{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px 24px;max-width:1300px;margin:auto}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+section{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px}
+h2{font-size:15px;margin:0 0 10px}label{display:block;color:var(--mut);font-size:13px;margin-top:8px}
+input,textarea,select{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:8px;font:inherit}
+button{background:var(--acc);color:#04211d;border:0;border-radius:6px;padding:9px 14px;font-weight:600;cursor:pointer;margin-top:10px}
+button.alt{background:transparent;color:var(--text);border:1px solid var(--line)}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--acc)}
+.mem{border-left:3px solid var(--acc);padding:6px 10px;margin:8px 0;background:var(--bg);border-radius:4px}
+.none{border-left-color:var(--warn)}pre{white-space:pre-wrap;font:inherit}.pill{font-size:12px;padding:2px 8px;border-radius:99px;border:1px solid var(--line)}
+.ok{color:var(--acc)}.no{color:var(--bad)}.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}
+</style></head><body>
+<header><h1>Deja Fix <span style="color:var(--mut);font-weight:400">— incident response that remembers</span></h1>
+<span class="pill" id="hs">Hindsight: checking…</span></header>
+<main>
+<section><h2>1. New incident</h2>
+<label for="title">Title</label><input id="title" value="Payment API returning HTTP 500 during peak traffic">
+<div class="row"><div><label for="svc">Service</label><select id="svc"><option>payment-api</option><option>auth-service</option><option>order-service</option><option>notification-service</option><option>database</option></select></div>
+<div><label for="mem">Hindsight memory</label><select id="mem"><option value="1">ON</option><option value="0">OFF (baseline)</option></select></div></div>
+<label for="desc">Description</label><textarea id="desc" rows="2">Checkout failing for ~12% of users since the evening traffic peak.</textarea>
+<label for="logs">Logs</label><textarea id="logs" rows="3">ERROR HikariPool-1 - Connection is not available, request timed out after 30000ms (total=50, active=50, idle=0, waiting=37)</textarea>
+<button id="go">Investigate incident</button>
+<h2 style="margin-top:20px">3. Resolve &amp; teach Deja Fix</h2>
+<div class="row"><div><label for="out">Outcome</label><select id="out"><option value="resolved">Resolved</option><option value="partial">Partially resolved</option><option value="unresolved">Unresolved</option></select></div>
+<div><label for="min">Minutes to resolve</label><input id="min" type="number" value="12"></div></div>
+<label for="rc">Root cause</label><input id="rc">
+<label for="act">Action that actually fixed it</label><textarea id="act" rows="2"></textarea>
+<label for="les">Lessons learned</label><input id="les">
+<label for="sw">Did the suggestion work?</label><select id="sw"><option value="">Not applicable</option><option value="true">Yes</option><option value="false">No</option></select>
+<button id="save">Save resolution &amp; teach Deja Fix</button><div id="saved" aria-live="polite"></div></section>
+<section><h2>2. Memories retrieved from Hindsight</h2><div id="mems" aria-live="polite"><span style="color:var(--mut)">Run an investigation to see recalled incidents.</span></div>
+<h2 style="margin-top:20px">Recommended action plan</h2><pre id="plan"></pre>
+<h2 style="margin-top:20px">Patterns across incidents <button class="alt" id="ref">Reflect</button></h2><pre id="refl"></pre></section>
+</main>
+<script>
+const $=id=>document.getElementById(id);let n=Number(localStorage.n||0);
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const post=(u,b)=>fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json());
+fetch('/api/health/hindsight').then(r=>r.json()).then(h=>{$('hs').innerHTML=h.connected?`<span class="ok">Hindsight connected</span> · bank ${esc(h.bankId)}`:'<span class="no">Hindsight not connected</span>'});
+$('go').onclick=async()=>{$('plan').textContent='Searching operational memory and generating plan…';$('mems').textContent='Recalling related incidents…';
+ const d=await post('/api/investigate',{title:$('title').value,service:$('svc').value,description:$('desc').value,logs:$('logs').value,use_memory:$('mem').value==='1'});
+ $('mems').innerHTML=d.memory_error?`<div class="mem none">${esc(d.memory_error)}</div>`:!d.memory_used?'<div class="mem none">Memory is OFF: generic troubleshooting only.</div>':d.memories.length?d.memories.map((m,i)=>`<div class="mem"><b>M${i+1}</b> <span class="pill">rank ${i+1} of ${d.memories.length}</span><br>${esc(m.text)}</div>`).join(''):'<div class="mem none">No relevant memory was found.</div>';
+ $('plan').textContent=d.plan};
+$('save').onclick=async()=>{const sw=$('sw').value;n++;localStorage.n=n;
+ const d=await post('/api/resolve',{incident_id:'INC-'+String(100+n).padStart(4,'0'),title:$('title').value,service:$('svc').value,outcome:$('out').value,root_cause:$('rc').value,action_taken:$('act').value,minutes:Number($('min').value)||null,lessons:$('les').value,suggestion_worked:sw===''?null:sw==='true'});
+ $('saved').innerHTML=d.saved?`<div class="mem"><b class="ok">Deja Fix learned from this incident.</b><br>${esc(d.memory)}</div>`:`<div class="mem none">${esc(d.error)}</div>`};
+$('ref').onclick=async()=>{$('refl').textContent='Synthesizing historical evidence…';const d=await fetch('/api/reflect').then(r=>r.json());$('refl').textContent=d.text||d.error};
+</script></body></html>
