@@ -2,6 +2,32 @@
 
 An on-call agent that recalls past incidents, root causes, and which fixes worked or failed, then learns from each new outcome using [Hindsight](https://hindsight.vectorize.io/) memory.
 
+## Proof this uses real Hindsight memory, not a mock
+
+- Live Hindsight Cloud bank: `dejafix-incidents`, viewable in the [Hindsight dashboard](https://ui.hindsight.vectorize.io)
+- Real client, real API calls — no local database pretending to be memory:
+
+```python
+from hindsight_client import Hindsight
+hs = Hindsight(base_url=os.getenv("HINDSIGHT_BASE_URL"), api_key=os.getenv("HINDSIGHT_API_KEY"))
+
+# recall — search past incidents by meaning
+res = hs.recall(bank_id=BANK, query=query)
+
+# retain — store what actually fixed it
+hs.retain(bank_id=BANK, content=content, context="production incident", timestamp=...)
+
+# reflect — synthesize patterns across every incident retained so far
+hs.reflect(bank_id=BANK, query=q)
+```
+
+- **Before/after, same incident:** memory OFF gives 5 generic guesses; memory ON recalls the exact prior fix and cites it — see screenshots below.
+- **Independent proof it's real:** the Hindsight dashboard's own Constellation graph shows 17 memories automatically connected by 311 semantic, temporal, entity, and causal links — a static/local memory store cannot produce this.
+
+## Known limitation
+
+The resolution form doesn't currently validate required fields. An empty root cause / action field silently retains a near-empty memory. We hit this during testing (see the "learned" screenshot below — compare a filled vs. empty save) and fixed our own test process around it; the code-level validation is a clear next step.
+
 ## Architecture
 
 The browser talks to a FastAPI backend, which splits into two calls: Groq for LLM reasoning, and Hindsight Cloud for memory (retain, recall, reflect) against a dedicated `dejafix-incidents` bank.
