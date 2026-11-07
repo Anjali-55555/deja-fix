@@ -24,7 +24,7 @@ hs.reflect(bank_id=BANK, query=q)
 ```
 
 - **Before/after, same incident:** with memory OFF the agent gives generic guesses. With memory ON it recalls earlier payment-api pool-exhaustion incidents and cites them (screenshots below).
-- **Independent proof it's real:** the Hindsight dashboard's own Constellation graph connects retained incidents through semantic, temporal, entity, and causal links. In our first run, 17 memories were linked by 311 relationships (screenshots below). The bank has since grown with the larger dataset described below.
+- **Independent proof it's real:** the Hindsight dashboard's own Constellation graph connects retained incidents through semantic, temporal, entity, and causal links. The bank currently holds 43 memories connected by 1,068 links (screenshots below), and none of those links were defined by us.
 
 ## What changed in this version
 
