@@ -1,7 +1,7 @@
-﻿import os, datetime as dt
+import os, datetime as dt
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 from hindsight_client import Hindsight
 import httpx
@@ -28,8 +28,8 @@ class Resolution(BaseModel):
     title: str
     service: str
     outcome: str  # resolved | partial | unresolved
-    root_cause: str
-    action_taken: str
+    root_cause: str = Field(min_length=5)      # required: no near-empty memories
+    action_taken: str = Field(min_length=5)    # required: no near-empty memories
     minutes: int | None = None
     lessons: str = ""
     suggestion_worked: bool | None = None
